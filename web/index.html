@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#152720">
+  <meta name="description" content="Explore Canadian broadband and mobile availability and compare CRTC plan pricing over time.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' blob:; base-uri 'none'; form-action 'none'">
+  <title>Telecom Pulse · CoolCode</title>
+  <link rel="stylesheet" href="./style.css">
+  <script type="module" src="./app.mjs"></script>
+</head>
+<body>
+<header><div class="wrap mast"><a href="../">CoolCode.ca</a><span>Canadian telecom data</span></div></header>
+<section class="hero"><div class="wrap">
+  <h1>Telecom Pulse</h1>
+  <p>Check reported network availability near a community, then put it alongside the province’s historical plan prices.</p>
+</div></section>
+<main class="wrap">
+  <article aria-labelledby="location-title" class="panel">
+    <h2 id="location-title">Choose a coverage area</h2>
+    <div class="controls">
+      <label>Province or territory<select id="province" disabled></select></label>
+      <label>Find a subdivision<input id="search" type="search" placeholder="Try Langley or Halifax" disabled></label>
+      <label class="wide">Census subdivision and area<select id="place" disabled></select></label>
+    </div>
+    <p class="status" id="status" role="status">Loading the latest data snapshot…</p>
+  </article>
+  <section id="results" aria-label="Coverage and pricing evidence" hidden>
+    <div class="stats" id="stats"></div>
+    <div class="grid">
+      <section class="panel" aria-labelledby="coverage-title">
+        <h2 id="coverage-title">Network availability</h2>
+        <p id="coverage-scope" class="muted"></p>
+        <label>Availability measure<select id="metric">
+          <option value="fixed">50/10 Mbps with unlimited data</option>
+          <option value="gigabit">Gigabit broadband</option>
+          <option value="lte">LTE mobile</option>
+          <option value="nr">5G mobile</option>
+        </select></label>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Availability by year">
+          <table><thead><tr><th scope="col">Year</th><th scope="col">Reported coverage</th><th scope="col">Covered / base</th></tr></thead><tbody id="coverage"></tbody></table>
+        </div>
+        <p class="muted small">Estimates use CRTC and Statistics Canada data. Actual service at a property can differ. Blank source observations appear as unavailable.</p>
+        <a id="availability-download" href="https://open.canada.ca/data/en/dataset/bd41f23a-6dbc-45ee-9419-422153aff567">CRTC coverage data</a>
+      </section>
+      <section class="panel" aria-labelledby="pricing-title">
+        <h2 id="pricing-title">Reported plan prices</h2>
+        <p class="muted">Provincial and Canadian averages for survey plans, in CAD per month.</p>
+        <div class="controls">
+          <label>Service<select id="service"><option>Internet</option><option>Mobile</option></select></label>
+          <label>Survey market<select id="market"><option value="National">All survey areas</option><option>Urban</option><option>Rural</option></select></label>
+          <label>Plan<select id="plan"></select></label>
+          <label id="speed-field" hidden>Mobile speed<select id="speed"></select></label>
+        </div>
+        <div class="table-wrap" tabindex="0" role="region" aria-label="Reported monthly plan prices by year">
+          <table><thead><tr><th scope="col">Year</th><th scope="col" id="price-province">Province</th><th scope="col">Canada</th></tr></thead><tbody id="pricing"></tbody></table>
+        </div>
+        <p class="muted small">Providers report prices available on December 1 of the survey year. These averages describe surveyed plans across the selected market. Extra fees and certain discounts are excluded.</p>
+        <a id="pricing-download" href="https://open.canada.ca/data/en/dataset/8bde476f-49e1-455d-9705-77e6ffab72ca">CRTC pricing data</a>
+      </section>
+    </div>
+    <section class="panel source">
+      <div>
+        <h2>Use the evidence</h2>
+        <p class="muted">Coverage describes the selected local area. Prices describe the larger province and survey market. Each series keeps its own dates and missing values.</p>
+      </div>
+      <button type="button" id="export">Download selected series CSV</button>
+    </section>
+  </section>
+  <noscript>Enable JavaScript to explore the published data snapshot.</noscript>
+</main>
+<footer><div class="wrap foot"><span id="build-date">CRTC Communications Market Reports</span><a href="https://crtc.gc.ca/eng/publications/reports/PolicyMonitoring/fac.htm">Coverage methodology</a><a href="https://crtc.gc.ca/eng/publications/reports/PolicyMonitoring/comm.htm">Survey methodology</a><a href="https://open.canada.ca/en/open-government-licence-canada">Open Government Licence</a><a href="../broadbandatlas/">Broadband Atlas</a><a href="https://github.com/jsdyer/telecompulse">Source code</a></div></footer>
+</body>
+</html>
