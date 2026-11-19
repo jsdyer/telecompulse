@@ -3,8 +3,10 @@
 [Open on CoolCode.ca](https://coolcode.ca/telecompulse/). Compare network availability for a Canadian census subdivision area with the historical pricing for the same province and a national benchmark. Start with Langley in BC or select Nova Scotia to browse Halifax. Change the area type, availability measure, service, survey market, plan, and mobile speed independently. The CSV keeps the local and provincial scope in separate columns.
 
 <!-- coolcode:guide -->
-Open the [Oxford example](https://coolcode.ca/telecompulse/?example=oxford), then expand the provider offers and switch between 2024 and 2025. The province’s survey average changes with the mix of offers in Bear River, Mahone Bay and Wedgeport.
+Open the Oxford example, then expand the provider offers and switch between 2024 and 2025. The province’s survey average changes with the mix of offers in Bear River, Mahone Bay and Wedgeport.
 <!-- /coolcode:guide -->
+
+[Open the Oxford coverage and price example](https://coolcode.ca/telecompulse/?example=oxford).
 
 ## What happened in Oxford?
 
