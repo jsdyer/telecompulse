@@ -1,0 +1,41 @@
+{
+  "id": "telecompulse",
+  "title": "Telecom Pulse",
+  "description": "Compare local broadband coverage with the provider offers behind each provincial price average.",
+  "category": "liminal-tools",
+  "tags": [
+    "crtc",
+    "telecom",
+    "broadband",
+    "mobile",
+    "wireless",
+    "regulators",
+    "statistics",
+    "canada"
+  ],
+  "icon": "chart-no-axes-combined",
+  "url": "/telecompulse/",
+  "source": "https://github.com/jsdyer/telecompulse",
+  "hosting": "project",
+  "access": "browser",
+  "data_info": {
+    "mode": "snapshot",
+    "detail": "CRTC coverage estimates use census areas. Plan prices come from offers in named survey communities.",
+    "cadence": "Weekly",
+    "probes": [
+      {
+        "url": "https://coolcode.ca/telecompulse/data/manifest.json",
+        "path": [
+          "built"
+        ],
+        "label": "Snapshot generated",
+        "count_at": {
+          "path": [
+            "places"
+          ],
+          "unit": "coverage areas"
+        }
+      }
+    ]
+  }
+}
