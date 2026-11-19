@@ -10,6 +10,8 @@ const metricColumns = {
   nr: [6, 2, 'Residents'],
 };
 const provinceCache = new Map();
+const reportCache = new Map();
+const startOxford = new URLSearchParams(location.search).get('example') === 'oxford';
 let manifest, prices, places = [], place, selectedSeries, generation = 0;
 
 function node(tag, value) {
@@ -56,7 +58,7 @@ function updatePlaces() {
   pickPlace();
 }
 
-async function selectProvince() {
+async function selectProvince(oxford = false) {
   const request = ++generation;
   const province = $('province').value;
   place = null;
@@ -70,7 +72,7 @@ async function selectProvince() {
     if (request !== generation) return;
     places = provinceCache.get(province);
     $('search').disabled = false;
-    $('search').value = ({ BC: 'Langley', NS: 'Halifax' })[province] ?? '';
+    $('search').value = oxford === true ? '1211012' : ({ BC: 'Langley', NS: 'Halifax' })[province] ?? '';
     updatePlaces();
   } catch {
     if (request !== generation) return;
@@ -148,6 +150,47 @@ function emptyRow(message) {
   return row;
 }
 
+async function showReports() {
+  if (!$('report-details').open) return;
+  const province = $('province').value;
+  const market = $('market').value;
+  const plan = $('plan').value;
+  const speed = $('speed').value;
+  const year = Number($('report-year').value);
+  const version = generation;
+  if (!reportCache.has(province)) {
+    reportCache.set(province, data('prices-' + province).catch(error => {
+      reportCache.delete(province);
+      throw error;
+    }));
+  }
+  $('report-summary').textContent = 'Loading provider reports…';
+  $('report-rows').replaceChildren();
+  try {
+    const reports = await reportCache.get(province);
+    if (version !== generation || market !== $('market').value || plan !== $('plan').value ||
+        speed !== $('speed').value || year !== Number($('report-year').value)) return;
+    const selected = reports.filter(row => row[0] === year && (market === 'National' || market === row[1]) && plan === row[2] && speed === row[3]);
+    const offers = new Map();
+    for (const [, , , , community, brand, price] of selected) {
+      const key = JSON.stringify([brand, price]);
+      if (!offers.has(key)) offers.set(key, {brand, price, communities: new Set()});
+      offers.get(key).communities.add(community);
+    }
+    $('report-summary').textContent = selected.length
+      ? selected.length + ' provincial source rows. Identical offers are grouped by provider and price. The averages above come directly from the CRTC averages table.'
+      : 'The detailed price file has no matching provincial offers for this selection.';
+    const rows = [...offers.values()].sort((a, b) => a.price - b.price || collator.compare(a.brand, b.brand)).map(offer => {
+      const tr = node('tr');
+      tr.append(node('th', offer.brand), node('td', dollars.format(offer.price)), node('td', [...offer.communities].sort(collator.compare).join(', ')));
+      return tr;
+    });
+    $('report-rows').replaceChildren(...rows);
+  } catch {
+    if (version === generation) $('report-summary').textContent = 'The detailed price file could not be loaded. The published averages are available above.';
+  }
+}
+
 function render() {
   if (!place) return;
   $('results').hidden = false;
@@ -156,6 +199,16 @@ function render() {
   const coverage = coverageRows();
   const pricing = priceRows();
   selectedSeries = { coverage, pricing };
+  const marketName = $('market').selectedOptions[0].textContent;
+  const pricePlan = [$('plan').value, $('speed').value].filter(Boolean).join(' · ');
+  $('pricing-scope').textContent = marketName + ' survey averages for ' + provinceName + ' and Canada, in CAD per month. These describe the surveyed communities in each market.';
+  const gap = year => coverage.some(row => row.year === year && row.base > 0 && row.covered == null);
+  $('oxford-note').hidden = !(place[1] === '1211012' && place[2] === 'Rural' && $('metric').value === 'gigabit' && gap(2022) && gap(2023));
+  const priorYear = $('report-year').value;
+  const yearOptions = pricing.filter(row => row.province != null).map(row => row.year).toReversed();
+  $('report-year').replaceChildren(...yearOptions.map(year => option(String(year), year)));
+  if (yearOptions.includes(Number(priorYear))) $('report-year').value = priorYear;
+  showReports();
   const coverageTable = coverage.toReversed().map(row => {
     const tr = node('tr');
     const value = node('td');
@@ -166,7 +219,7 @@ function render() {
       meter.value = row.rate;
       meter.setAttribute('aria-hidden', 'true');
       value.append(meter, percent.format(row.rate));
-    } else value.textContent = 'Unavailable';
+    } else value.textContent = row.covered == null ? 'No covered estimate' : 'No positive base';
     const fraction = [row.covered, row.base].map(amount => amount == null ? '—' : counts.format(amount)).join(' / ');
     tr.append(node('th', row.year), value, node('td', fraction));
     tr.firstChild.scope = 'row';
@@ -185,9 +238,9 @@ function render() {
   const currentProvince = pricing.findLast(row => row.province != null);
   const currentNational = pricing.findLast(row => row.canada != null);
   const stats = [
-    [currentCoverage ? percent.format(currentCoverage.rate) : '—', `Coverage${currentCoverage ? ` · ${currentCoverage.year}` : ''}`],
-    [priced(currentProvince?.province), `${provinceName}${currentProvince ? ` · ${currentProvince.year}` : ''}`],
-    [priced(currentNational?.canada), `Canada${currentNational ? ` · ${currentNational.year}` : ''}`],
+    [currentCoverage ? percent.format(currentCoverage.rate) : '—', `${$('metric').selectedOptions[0].textContent} · ${place[0]} ${place[2]}${currentCoverage ? ` · ${currentCoverage.year}` : ''}`],
+    [priced(currentProvince?.province), `${provinceName} · ${marketName} · ${pricePlan}${currentProvince ? ` · ${currentProvince.year}` : ''}`],
+    [priced(currentNational?.canada), `Canada · ${marketName} · ${pricePlan}${currentNational ? ` · ${currentNational.year}` : ''}`],
   ];
   $('stats').replaceChildren(...stats.map(([value, label]) => {
     const stat = node('div');
@@ -231,16 +284,19 @@ $('market').addEventListener('change', updatePriceChoices);
 $('plan').addEventListener('change', () => updateSpeedChoices());
 $('speed').addEventListener('change', render);
 $('export').addEventListener('click', download);
+$('report-details').addEventListener('toggle', showReports);
+$('report-year').addEventListener('change', showReports);
 
 try {
   [manifest, prices] = await Promise.all([data('manifest'), data('pricing')]);
   $('province').replaceChildren(...Object.entries(manifest.provinces).map(([code, name]) => option(code, name)));
-  $('province').value = 'BC';
+  $('province').value = startOxford ? 'NS' : 'BC';
+  if (startOxford) $('metric').value = 'gigabit';
   $('province').disabled = false;
   $('build-date').textContent = `CRTC Communications Market Reports · snapshot built ${manifest.built.slice(0, 10)}`;
   $('availability-download').href = manifest.availability;
   $('pricing-download').href = manifest.pricing;
-  await selectProvince();
+  await selectProvince(startOxford);
 } catch {
   status('The snapshot could not be loaded. Retry later or use the official sources below.', true);
 }

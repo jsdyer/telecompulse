@@ -47,7 +47,7 @@ def values(raw):
         number = float(raw)
     except ValueError:
         return None
-    return round(number, 5) if math.isfinite(number) and number >= 0 else None
+    return number if math.isfinite(number) and number >= 0 else None
 
 
 def availability(path, data):
@@ -110,6 +110,25 @@ def pricing(path, data):
                     if key in observations and observations[key] != price:
                         raise ValueError(f'Different averages for a single pricing series: {key}')
                     observations[key] = price
+        member = next(name for name in archive.namelist() if name.endswith('/Prix-Prices.csv'))
+        reports = defaultdict(list)
+        baskets = {(province, plan, tier, year) for _, province, _, plan, tier, year in observations}
+        with archive.open(member) as source:
+            rows = csv.reader(io.TextIOWrapper(source, encoding='cp1252', newline=''))
+            header = next(rows)
+            if len(header) != 11 or header[6] != 'Plan' or 'Reported monthly price' not in header[7]:
+                raise ValueError('Pricing report columns changed.')
+            for year, entity, region, community, province, _, plan, raw, brand, speed, _ in rows:
+                if not year.isdigit():
+                    continue
+                tier = speed.split(' / ')[-1]
+                price = values(raw)
+                if price is not None and (province, plan, tier, int(year)) in baskets:
+                    reports[province].append([int(year), region.split(' / ')[-1], plan, tier, community, brand or entity, price])
+        if set(reports) != set(PROVINCES):
+            raise ValueError('Incomplete geographic coverage in pricing reports.')
+        for province, records in reports.items():
+            write(data / f'prices-{province}.json', sorted(records))
     if len(observations) < 1000:
         raise ValueError('Pricing archive did not produce expected observations.')
     write(data / 'pricing.json', [[*key, price] for key, price in sorted(observations.items())])
