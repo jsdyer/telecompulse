@@ -32,6 +32,10 @@ jobs:
           fi
           python3 scripts/build.py
           test -s dist/index.html
+      - name: Verify Oxford coverage and the CRTC price sample in Chrome
+        run: |
+          python3 -m pip install playwright==1.62.0
+          python3 scripts/check_browser.py
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist

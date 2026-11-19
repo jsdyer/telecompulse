@@ -34,3 +34,8 @@ meter{width:3.4rem;height:.65rem;margin-right:.3rem;accent-color:var(--green)}
 .source p{max-width:65ch;margin-bottom:0}
 footer{border-top:1px solid var(--line);padding:1rem 0 2rem;font-size:.84rem}
 @media(max-width:720px){.grid{grid-template-columns:minmax(0,1fr)}.stats{gap:.45rem}.stat strong{font-size:1.05rem}.stat span{font-size:.73rem;line-height:1.2;display:block}.coverage-number{min-width:5rem}meter{display:none}}
+
+#report-details{border-block:1px solid var(--line);padding:.7rem 0;margin:.8rem 0}
+#report-details summary{cursor:pointer;font-weight:700}
+#report-details label{margin:.65rem 0;max-width:10rem}
+#report-rows th,#report-rows td:last-child{white-space:normal}
