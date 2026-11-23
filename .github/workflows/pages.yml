@@ -36,7 +36,7 @@ jobs:
         run: |
           python3 -m pip install playwright==1.62.0
           python3 scripts/check_browser.py
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
 
@@ -53,4 +53,4 @@ jobs:
     steps:
       - name: Publish GitHub Pages
         id: publish
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
